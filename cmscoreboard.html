@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMSL Inter factory Cricket Tournament - 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .cricket-bg { background-color: #0f172a; background-image: radial-gradient(circle at 50% top, #166534 0%, #0f172a 70%); }
+        .tab-active { border-bottom: 4px solid #22c55e; color: #22c55e; }
+        .tab-inactive { color: #94a3b8; }
+        .tab-inactive:hover { color: #cbd5e1; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+</head>
+<body class="cricket-bg text-slate-100 min-h-screen flex flex-col relative overflow-x-hidden">
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-full shadow-lg font-semibold transition-all duration-300 opacity-0 pointer-events-none z-50 transform -translate-y-10">
+        Notification message
+    </div>
+
+    <!-- Header -->
+    <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-700 sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center gap-2">
+            <div class="flex items-center gap-3">
+                <img src="logo.jpg" alt="CMSL Logo" class="h-9 w-9 md:h-10 md:w-10 object-contain rounded-lg bg-white p-0.5 shadow-md">
+                <h1 class="text-xs md:text-xl font-bold tracking-tight text-white leading-tight">CMSL Inter factory <span class="text-green-500 block md:inline">Cricket Tournament - 2026</span></h1>
+            </div>
+            <button id="navAdminBtn" class="bg-slate-800 hover:bg-slate-700 text-xs md:text-sm font-semibold py-2 px-3 md:px-4 rounded-lg border border-slate-600 transition-colors whitespace-nowrap">
+                Admin Panel
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl mx-auto w-full px-4 py-8">
+        
+        <!-- Public Dashboard View -->
+        <div id="publicView" class="block">
+            <!-- Tabs -->
+            <div class="flex space-x-8 border-b border-slate-700 mb-8">
+                <button id="tabUpcoming" class="pb-3 text-base md:text-lg font-semibold tab-active transition-colors">Upcoming Matches</button>
+                <button id="tabResults" class="pb-3 text-base md:text-lg font-semibold tab-inactive transition-colors">Results</button>
+            </div>
+
+            <!-- Match List Container -->
+            <div id="matchListContainer" class="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
+                <!-- Matches will be injected here via JS -->
+                <div class="text-slate-400 text-center col-span-full py-10">Loading matches...</div>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard View (Hidden by default) -->
+        <div id="adminView" class="hidden">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl md:text-2xl font-bold text-white">Admin Dashboard</h2>
+                <button id="btnBackToPublic" class="text-green-400 hover:text-green-300 text-sm flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
+                    Back to Public View
+                </button>
+            </div>
+
+            <div class="grid gap-8 lg:grid-cols-3">
+                <!-- Add New Match Form -->
+                <div class="lg:col-span-1 bg-slate-800 rounded-2xl p-4 md:p-6 border border-slate-700 shadow-xl self-start sticky top-24">
+                    <h3 class="text-lg md:text-xl font-bold mb-4 text-green-400" id="formTitle">Add New Match</h3>
+                    <form id="matchForm" class="space-y-4">
+                        <input type="hidden" id="editMatchId">
+                        
+                        <!-- Match Name / Title Field Added Here -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Match Name / Title (Optional)</label>
+                            <input type="text" id="matchName" placeholder="e.g. Group A - Match 1" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Team 1 (Factory)</label>
+                            <select id="team1" required class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none">
+                                <option value="" disabled selected>Select Factory</option>
+                                <option value="CMG">CMG</option>
+                                <option value="CME">CME</option>
+                                <option value="CMK">CMK</option>
+                                <option value="CMD">CMD</option>
+                                <option value="CMW">CMW</option>
+                                <option value="CMM">CMM</option>
+                                <option value="CME - Central">CME - Central</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Team 2 (Factory)</label>
+                            <select id="team2" required class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none">
+                                <option value="" disabled selected>Select Factory</option>
+                                <option value="CMG">CMG</option>
+                                <option value="CME">CME</option>
+                                <option value="CMK">CMK</option>
+                                <option value="CMD">CMD</option>
+                                <option value="CMW">CMW</option>
+                                <option value="CMM">CMM</option>
+                                <option value="CME - Central">CME - Central</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Match Date & Time</label>
+                            <input type="datetime-local" id="matchDate" required class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-white focus:border-green-500 outline-none [color-scheme:dark]">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Status</label>
+                            <select id="matchStatus" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-white focus:border-green-500 outline-none">
+                                <option value="upcoming">Upcoming</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Result fields (Hidden if upcoming) -->
+                        <div id="resultFields" class="hidden space-y-4 pt-4 border-t border-slate-700 mt-4">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-300 mb-1" id="labelTeam1Score">Team 1 Score</label>
+                                    <input type="text" id="team1Score" placeholder="e.g. 145/6" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-white focus:border-green-500 outline-none text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-300 mb-1" id="labelTeam2Score">Team 2 Score</label>
+                                    <input type="text" id="team2Score" placeholder="e.g. 142/9" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-white focus:border-green-500 outline-none text-sm">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Winner</label>
+                                <select id="matchWinner" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-white focus:border-green-500 outline-none">
+                                    <option value="" disabled selected>Select Winner</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Match Result / Summary (Won by)</label>
+                                <input type="text" id="matchSummary" placeholder="e.g. Won by 3 runs" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-white focus:border-green-500 outline-none">
+                            </div>
+                        </div>
+
+                        <div class="pt-4 flex gap-3">
+                            <button type="submit" class="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-2.5 px-4 rounded-lg transition-colors">
+                                Save Match
+                            </button>
+                            <button type="button" id="btnCancelEdit" class="hidden bg-slate-600 hover:bg-slate-500 text-white font-bold py-2.5 px-4 rounded-lg transition-colors">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Admin Match List -->
+                <div class="lg:col-span-2">
+                    <div class="bg-slate-800 rounded-2xl p-4 md:p-6 border border-slate-700 shadow-xl overflow-x-auto">
+                        <h3 class="text-lg md:text-xl font-bold mb-4 text-white">Manage Matches</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm whitespace-nowrap">
+                                <thead class="text-xs text-slate-400 uppercase bg-slate-900/50 rounded-t-lg">
+                                    <tr>
+                                        <th class="px-4 py-3 rounded-tl-lg">Match #</th>
+                                        <th class="px-4 py-3">Match Title / Teams</th>
+                                        <th class="px-4 py-3">Date</th>
+                                        <th class="px-4 py-3">Status</th>
+                                        <th class="px-4 py-3 text-right rounded-tr-lg">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminMatchTableBody" class="divide-y divide-slate-700">
+                                    <!-- Admin table rows injected via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Admin Login Modal -->
+    <div id="adminLoginModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-slate-800 p-6 md:p-8 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-md transform scale-95 transition-transform duration-300" id="adminLoginCard">
+            <h3 class="text-xl md:text-2xl font-bold mb-2 text-white">Admin Access</h3>
+            <p class="text-slate-400 text-sm mb-6">Enter the passcode to manage the tournament.</p>
+            <div class="space-y-4">
+                <input type="password" id="adminPin" placeholder="Enter PIN" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none text-center text-2xl tracking-[0.5em]">
+                <button id="btnLogin" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                    Access Dashboard
+                </button>
+                <button id="btnCloseLogin" class="w-full bg-transparent hover:bg-slate-700 text-slate-300 py-2 px-4 rounded-lg transition-colors mt-2">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ඔයාගේ සැබෑ Firebase Configuration එක මෙතැනට දමා ඇත
+        const firebaseConfig = {
+            apiKey: "AIzaSyAoLga0bRSeWgLxVFxBR65pnszA-CkuXG8",
+            authDomain: "cmsl-cricket-2026.firebaseapp.com",
+            projectId: "cmsl-cricket-2026",
+            storageBucket: "cmsl-cricket-2026.firebasestorage.app",
+            messagingSenderId: "719964612200",
+            appId: "1:719964612200:web:b6a683a894b9b188693ddd"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let matches = [];
+        let currentTab = 'upcoming'; 
+        let unsubscribe = null;
+
+        const publicView = document.getElementById('publicView');
+        const adminView = document.getElementById('adminView');
+        const navAdminBtn = document.getElementById('navAdminBtn');
+        const btnBackToPublic = document.getElementById('btnBackToPublic');
+        
+        const tabUpcoming = document.getElementById('tabUpcoming');
+        const tabResults = document.getElementById('tabResults');
+        const matchListContainer = document.getElementById('matchListContainer');
+        
+        const adminLoginModal = document.getElementById('adminLoginModal');
+        const adminLoginCard = document.getElementById('adminLoginCard');
+        const adminPin = document.getElementById('adminPin');
+        const btnLogin = document.getElementById('btnLogin');
+        const btnCloseLogin = document.getElementById('btnCloseLogin');
+        
+        const matchForm = document.getElementById('matchForm');
+        const matchNameInput = document.getElementById('matchName');
+        const team1Select = document.getElementById('team1');
+        const team2Select = document.getElementById('team2');
+        const statusSelect = document.getElementById('matchStatus');
+        const resultFields = document.getElementById('resultFields');
+        const winnerSelect = document.getElementById('matchWinner');
+        const team1ScoreInput = document.getElementById('team1Score');
+        const team2ScoreInput = document.getElementById('team2Score');
+        const labelTeam1Score = document.getElementById('labelTeam1Score');
+        const labelTeam2Score = document.getElementById('labelTeam2Score');
+        
+        const adminMatchTableBody = document.getElementById('adminMatchTableBody');
+        const editMatchId = document.getElementById('editMatchId');
+        const formTitle = document.getElementById('formTitle');
+        const btnCancelEdit = document.getElementById('btnCancelEdit');
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-lg font-semibold transition-all duration-300 z-50 ${isError ? 'bg-red-500' : 'bg-green-500'} text-white`;
+            
+            toast.classList.remove('opacity-0', '-translate-y-10');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', '-translate-y-10');
+            }, 3000);
+        }
+
+        function formatDate(dateString) {
+            const options = { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return new Date(dateString).toLocaleDateString('en-US', options);
+        }
+
+        async function initApp() {
+            try {
+                await signInAnonymously(auth);
+
+                // Firestore Database එකේ 'matches' කියන collection එකට කනෙක්ට් වේ
+                const matchesRef = collection(db, 'matches');
+                
+                unsubscribe = onSnapshot(matchesRef, (snapshot) => {
+                    matches = [];
+                    snapshot.forEach((doc) => {
+                        matches.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    matches.sort((a, b) => new Date(a.date) - new Date(b.date));
+                    
+                    renderPublicMatches();
+                    renderAdminMatches();
+                }, (error) => {
+                    console.error("Firestore error:", error);
+                    showToast("Error loading matches. Please try again.", true);
+                });
+
+            } catch (error) {
+                console.error("Auth error:", error);
+                showToast("Authentication failed.", true);
+            }
+        }
+
+        function renderPublicMatches() {
+            matchListContainer.innerHTML = '';
+            
+            const filteredMatches = matches.filter(m => m.status === currentTab);
+            
+            if (filteredMatches.length === 0) {
+                matchListContainer.innerHTML = `
+                    <div class="col-span-full py-12 text-center bg-slate-800/50 rounded-2xl border border-slate-700 border-dashed">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-slate-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p class="text-slate-400 text-lg">No ${currentTab} matches found.</p>
+                    </div>`;
+                return;
+            }
+
+            if (currentTab === 'completed') {
+                filteredMatches.reverse();
+            }
+
+            filteredMatches.forEach((match, index) => {
+                const isCompleted = match.status === 'completed';
+                const matchNumber = matches.findIndex(m => m.id === match.id) + 1;
+                const matchTitleDisplay = match.matchName ? match.matchName : `Match #${matchNumber}`;
+                
+                const getShortName = (name) => name.length > 6 ? name.substring(0, 5) + '..' : name;
+
+                let cardHTML = `
+                    <div class="bg-slate-800 rounded-2xl p-5 md:p-6 border border-slate-700 shadow-lg relative overflow-hidden group hover:border-slate-500 transition-colors">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-md bg-slate-700 text-slate-300">${matchTitleDisplay}</span>
+                            ${isCompleted && match.winner 
+                                ? `<span class="bg-green-600 text-xs font-bold px-3 py-1 rounded-bl-lg text-white shadow-md">Result</span>`
+                                : `<span class="bg-amber-500 text-xs font-bold px-3 py-1 rounded-bl-lg text-slate-900 shadow-md">Upcoming</span>`
+                            }
+                        </div>
+                        
+                        <div class="text-xs md:text-sm text-slate-400 mb-4 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            ${formatDate(match.date)}
+                        </div>
+                        
+                        <div class="flex justify-between items-center mb-4 gap-2">
+                            <div class="flex-1 text-center">
+                                <div class="w-14 h-14 md:w-16 md:h-16 mx-auto bg-slate-700 rounded-full flex items-center justify-center mb-2 shadow-inner border border-slate-600 ${isCompleted && match.winner === match.team1 ? 'ring-2 ring-green-500' : ''}">
+                                    <span class="text-xs md:text-sm font-bold text-slate-300 px-1 text-center">${getShortName(match.team1)}</span>
+                                </div>
+                                <h4 class="font-semibold text-white text-xs md:text-sm truncate ${isCompleted && match.winner === match.team1 ? 'text-green-400' : ''}">${match.team1}</h4>
+                                ${isCompleted && match.team1Score ? `<div class="text-xs md:text-sm font-bold text-slate-200 mt-1">${match.team1Score}</div>` : ''}
+                            </div>
+                            
+                            <div class="px-2 text-slate-500 font-bold text-sm md:text-lg italic">VS</div>
+                            
+                            <div class="flex-1 text-center">
+                                <div class="w-14 h-14 md:w-16 md:h-16 mx-auto bg-slate-700 rounded-full flex items-center justify-center mb-2 shadow-inner border border-slate-600 ${isCompleted && match.winner === match.team2 ? 'ring-2 ring-green-500' : ''}">
+                                    <span class="text-xs md:text-sm font-bold text-slate-300 px-1 text-center">${getShortName(match.team2)}</span>
+                                </div>
+                                <h4 class="font-semibold text-white text-xs md:text-sm truncate ${isCompleted && match.winner === match.team2 ? 'text-green-400' : ''}">${match.team2}</h4>
+                                ${isCompleted && match.team2Score ? `<div class="text-xs md:text-sm font-bold text-slate-200 mt-1">${match.team2Score}</div>` : ''}
+                            </div>
+                        </div>
+                `;
+
+                if (isCompleted) {
+                    cardHTML += `
+                        <div class="mt-4 pt-3 border-t border-slate-700 text-center">
+                            <p class="text-green-400 font-bold text-sm md:text-base mb-0.5">${match.winner} Won</p>
+                            <p class="text-xs text-slate-300">${match.summary ? 'Won by ' + match.summary : (match.summary || '')}</p>
+                        </div>
+                    `;
+                }
+
+                cardHTML += `</div>`;
+                matchListContainer.insertAdjacentHTML('beforeend', cardHTML);
+            });
+        }
+
+        function renderAdminMatches() {
+            adminMatchTableBody.innerHTML = '';
+            
+            if(matches.length === 0) {
+                adminMatchTableBody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400">No matches found.</td></tr>`;
+                return;
+            }
+
+            matches.forEach((match, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-700/50 transition-colors group';
+                const matchTitleDisplay = match.matchName ? match.matchName : `Match #${index + 1}`;
+                tr.innerHTML = `
+                    <td class="px-4 py-4 whitespace-nowrap font-bold text-green-400">
+                        Match #${index + 1}
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap">
+                        <div class="font-medium text-white">${matchTitleDisplay}</div>
+                        <div class="text-xs text-slate-400">${match.team1} vs ${match.team2}</div>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-slate-300 text-sm">
+                        ${formatDate(match.date)}
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${match.status === 'completed' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}">
+                            ${match.status.charAt(0).toUpperCase() + match.status.slice(1)}
+                        </span>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-right">
+                        <button class="edit-btn text-blue-400 hover:text-blue-300 mr-2 px-2 py-1 rounded bg-blue-900/30 text-xs" data-id="${match.id}">Edit</button>
+                        <button class="delete-btn text-red-400 hover:text-red-300 px-2 py-1 rounded bg-red-900/30 text-xs" data-id="${match.id}">Delete</button>
+                    </td>
+                `;
+                adminMatchTableBody.appendChild(tr);
+            });
+
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => loadMatchForEditing(e.target.dataset.id));
+            });
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => deleteMatch(e.target.dataset.id));
+            });
+        }
+
+        matchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const matchData = {
+                matchName: document.getElementById('matchName').value.trim(),
+                team1: document.getElementById('team1').value,
+                team2: document.getElementById('team2').value,
+                date: document.getElementById('matchDate').value,
+                status: document.getElementById('matchStatus').value,
+                team1Score: document.getElementById('team1Score').value || '',
+                team2Score: document.getElementById('team2Score').value || '',
+                winner: document.getElementById('matchWinner').value || null,
+                summary: document.getElementById('matchSummary').value || null,
+                updatedAt: new Date().toISOString()
+            };
+
+            if (matchData.team1 === matchData.team2) {
+                showToast("Team 1 and Team 2 cannot be the same factory.", true);
+                return;
+            }
+
+            if (matchData.status === 'completed' && !matchData.winner) {
+                showToast("Please select a winner for a completed match.", true);
+                return;
+            }
+
+            const isEditing = editMatchId.value !== '';
+            const btnSubmit = matchForm.querySelector('button[type="submit"]');
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = 'Saving...';
+
+            try {
+                if (isEditing) {
+                    const matchRef = doc(db, 'matches', editMatchId.value);
+                    await updateDoc(matchRef, matchData);
+                    showToast("Match updated successfully!");
+                } else {
+                    matchData.createdAt = new Date().toISOString();
+                    const matchesCollection = collection(db, 'matches');
+                    await addDoc(matchesCollection, matchData);
+                    showToast("Match added successfully!");
+                }
+                resetForm();
+            } catch (error) {
+                console.error("Error saving document: ", error);
+                showToast("Error saving match.", true);
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = 'Save Match';
+            }
+        });
+
+        function loadMatchForEditing(id) {
+            const match = matches.find(m => m.id === id);
+            if (!match) return;
+
+            editMatchId.value = match.id;
+            formTitle.textContent = 'Edit Match';
+            btnCancelEdit.classList.remove('hidden');
+
+            document.getElementById('matchName').value = match.matchName || '';
+            document.getElementById('team1').value = match.team1;
+            document.getElementById('team2').value = match.team2;
+            document.getElementById('matchDate').value = match.date;
+            document.getElementById('matchStatus').value = match.status;
+            
+            updateWinnerOptions();
+            toggleResultFields();
+
+            if(match.status === 'completed') {
+                document.getElementById('team1Score').value = match.team1Score || '';
+                document.getElementById('team2Score').value = match.team2Score || '';
+                document.getElementById('matchWinner').value = match.winner || "";
+                document.getElementById('matchSummary').value = match.summary || "";
+            }
+
+            matchForm.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function deleteMatch(id) {
+            const btn = document.querySelector(`.delete-btn[data-id="${id}"]`);
+            if(btn.textContent === 'Delete') {
+                btn.textContent = 'Sure?';
+                btn.classList.replace('bg-red-900/30', 'bg-red-600');
+                btn.classList.add('text-white');
+                setTimeout(() => {
+                    if(btn) {
+                        btn.textContent = 'Delete';
+                        btn.classList.replace('bg-red-600', 'bg-red-900/30');
+                        btn.classList.remove('text-white');
+                    }
+                }, 3000);
+                return;
+            }
+
+            try {
+                await deleteDoc(doc(db, 'matches', id));
+                showToast("Match deleted.");
+                if (editMatchId.value === id) resetForm();
+            } catch (error) {
+                console.error("Error deleting match: ", error);
+                showToast("Error deleting match.", true);
+            }
+        }
+
+        function resetForm() {
+            matchForm.reset();
+            editMatchId.value = '';
+            formTitle.textContent = 'Add New Match';
+            btnCancelEdit.classList.add('hidden');
+            toggleResultFields();
+            updateWinnerOptions();
+        }
+
+        btnCancelEdit.addEventListener('click', resetForm);
+
+        function toggleResultFields() {
+            if (statusSelect.value === 'completed') {
+                resultFields.classList.remove('hidden');
+            } else {
+                resultFields.classList.add('hidden');
+                team1ScoreInput.value = '';
+                team2ScoreInput.value = '';
+                winnerSelect.value = '';
+                document.getElementById('matchSummary').value = '';
+            }
+        }
+
+        function updateWinnerOptions() {
+            const t1 = team1Select.value;
+            const t2 = team2Select.value;
+            
+            labelTeam1Score.textContent = t1 ? `${t1} Score` : 'Team 1 Score';
+            labelTeam2Score.textContent = t2 ? `${t2} Score` : 'Team 2 Score';
+
+            winnerSelect.innerHTML = `<option value="" disabled selected>Select Winner</option>`;
+            if (t1) winnerSelect.innerHTML += `<option value="${t1}">${t1}</option>`;
+            if (t2) winnerSelect.innerHTML += `<option value="${t2}">${t2}</option>`;
+        }
+
+        statusSelect.addEventListener('change', toggleResultFields);
+        team1Select.addEventListener('change', updateWinnerOptions);
+        team2Select.addEventListener('change', updateWinnerOptions);
+
+        function toggleViews(showAdmin) {
+            if (showAdmin) {
+                publicView.classList.add('hidden');
+                adminView.classList.remove('hidden');
+            } else {
+                adminView.classList.add('hidden');
+                publicView.classList.remove('hidden');
+            }
+        }
+
+        navAdminBtn.addEventListener('click', () => {
+            if (adminView.classList.contains('hidden')) {
+                adminLoginModal.classList.remove('hidden');
+                setTimeout(() => {
+                    adminLoginModal.classList.remove('opacity-0');
+                    adminLoginCard.classList.remove('scale-95');
+                }, 10);
+                adminPin.focus();
+            } else {
+                toggleViews(false);
+            }
+        });
+
+        btnBackToPublic.addEventListener('click', () => {
+            toggleViews(false);
+        });
+
+        function closeLoginModal() {
+            adminLoginModal.classList.add('opacity-0');
+            adminLoginCard.classList.add('scale-95');
+            setTimeout(() => {
+                adminLoginModal.classList.add('hidden');
+                adminPin.value = '';
+            }, 300);
+        }
+
+        btnCloseLogin.addEventListener('click', closeLoginModal);
+
+        btnLogin.addEventListener('click', () => {
+            if (adminPin.value === '688') {
+                showToast("Admin access granted.");
+                closeLoginModal();
+                toggleViews(true);
+            } else {
+                showToast("Invalid PIN.", true);
+                adminPin.value = '';
+                adminLoginCard.classList.add('-translate-x-2');
+                setTimeout(() => adminLoginCard.classList.replace('-translate-x-2', 'translate-x-2'), 100);
+                setTimeout(() => adminLoginCard.classList.replace('translate-x-2', 'translate-x-0'), 200);
+            }
+        });
+
+        tabUpcoming.addEventListener('click', () => {
+            currentTab = 'upcoming';
+            tabUpcoming.classList.replace('tab-inactive', 'tab-active');
+            tabResults.classList.replace('tab-active', 'tab-inactive');
+            renderPublicMatches();
+        });
+
+        tabResults.addEventListener('click', () => {
+            currentTab = 'completed';
+            tabResults.classList.replace('tab-inactive', 'tab-active');
+            tabUpcoming.classList.replace('tab-active', 'tab-inactive');
+            renderPublicMatches();
+        });
+
+        initApp();
+    </script>
+</body>
+</html>
