@@ -75,7 +75,6 @@
                     <form id="matchForm" class="space-y-4">
                         <input type="hidden" id="editMatchId">
                         
-                        <!-- Match Name / Title Field Added Here -->
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-1">Match Name / Title (Optional)</label>
                             <input type="text" id="matchName" placeholder="e.g. Group A - Match 1" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none text-sm">
@@ -119,7 +118,7 @@
                             </select>
                         </div>
                         
-                        <!-- Result fields (Hidden if upcoming) -->
+                        <!-- Result fields -->
                         <div id="resultFields" class="hidden space-y-4 pt-4 border-t border-slate-700 mt-4">
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
@@ -202,9 +201,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ඔයාගේ සැබෑ Firebase Configuration එක මෙතැනට දමා ඇත
         const firebaseConfig = {
             apiKey: "AIzaSyAoLga0bRSeWgLxVFxBR65pnszA-CkuXG8",
             authDomain: "cmsl-cricket-2026.firebaseapp.com",
@@ -277,7 +275,6 @@
             try {
                 await signInAnonymously(auth);
 
-                // Firestore Database එකේ 'matches' කියන collection එකට කනෙක්ට් වේ
                 const matchesRef = collection(db, 'matches');
                 
                 unsubscribe = onSnapshot(matchesRef, (snapshot) => {
@@ -604,17 +601,38 @@
 
         btnCloseLogin.addEventListener('click', closeLoginModal);
 
-        btnLogin.addEventListener('click', () => {
-            if (adminPin.value === '688') {
-                showToast("Admin access granted.");
-                closeLoginModal();
-                toggleViews(true);
-            } else {
-                showToast("Invalid PIN.", true);
-                adminPin.value = '';
-                adminLoginCard.classList.add('-translate-x-2');
-                setTimeout(() => adminLoginCard.classList.replace('-translate-x-2', 'translate-x-2'), 100);
-                setTimeout(() => adminLoginCard.classList.replace('translate-x-2', 'translate-x-0'), 200);
+        // Database එකෙන් පාස්වර්ඩ් එක චෙක් කරන කොටස
+        btnLogin.addEventListener('click', async () => {
+            const enteredPin = adminPin.value.trim();
+            if (!enteredPin) {
+                showToast("Please enter the PIN.", true);
+                return;
+            }
+
+            try {
+                const adminDocRef = doc(db, 'settings', 'admin');
+                const adminDocSnap = await getDoc(adminDocRef);
+
+                if (adminDocSnap.exists()) {
+                    const correctPin = adminDocSnap.data().pin;
+
+                    if (enteredPin === correctPin) {
+                        showToast("Admin access granted.");
+                        closeLoginModal();
+                        toggleViews(true);
+                    } else {
+                        showToast("Invalid PIN.", true);
+                        adminPin.value = '';
+                        adminLoginCard.classList.add('-translate-x-2');
+                        setTimeout(() => adminLoginCard.classList.replace('-translate-x-2', 'translate-x-2'), 100);
+                        setTimeout(() => adminLoginCard.classList.replace('translate-x-2', 'translate-x-0'), 200);
+                    }
+                } else {
+                    showToast("Admin settings not configured in DB.", true);
+                }
+            } catch (error) {
+                console.error("Error verifying PIN:", error);
+                showToast("Authentication error.", true);
             }
         });
 
